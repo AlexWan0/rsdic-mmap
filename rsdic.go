@@ -383,6 +383,118 @@ func (rsd *RSDic) UnmarshalBinary(in []byte) (err error) {
 	return nil
 }
 
+// Selfer interface for codec library
+func (rsd *RSDic) CodecEncodeSelf(enc *codec.Encoder) {
+	err := enc.Encode(rsd.bits)
+	if err != nil {
+		return
+	}
+	err = enc.Encode(rsd.pointerBlocks)
+	if err != nil {
+		return
+	}
+	err = enc.Encode(rsd.rankBlocks)
+	if err != nil {
+		return
+	}
+	err = enc.Encode(rsd.selectOneInds)
+	if err != nil {
+		return
+	}
+	err = enc.Encode(rsd.selectZeroInds)
+	if err != nil {
+		return
+	}
+	err = enc.Encode(rsd.rankSmallBlocks)
+	if err != nil {
+		return
+	}
+	err = enc.Encode(rsd.num)
+	if err != nil {
+		return
+	}
+	err = enc.Encode(rsd.oneNum)
+	if err != nil {
+		return
+	}
+	err = enc.Encode(rsd.zeroNum)
+	if err != nil {
+		return
+	}
+	err = enc.Encode(rsd.lastBlock)
+	if err != nil {
+		return
+	}
+	err = enc.Encode(rsd.lastOneNum)
+	if err != nil {
+		return
+	}
+	err = enc.Encode(rsd.lastZeroNum)
+	if err != nil {
+		return
+	}
+	err = enc.Encode(rsd.codeLen)
+	if err != nil {
+		return
+	}
+}
+
+// Selfer interface for codec library
+func (rsd *RSDic) CodecDecodeSelf(dec *codec.Decoder) {
+	err := dec.Decode(&rsd.bits)
+	if err != nil {
+		return
+	}
+	err = dec.Decode(&rsd.pointerBlocks)
+	if err != nil {
+		return
+	}
+	err = dec.Decode(&rsd.rankBlocks)
+	if err != nil {
+		return
+	}
+	err = dec.Decode(&rsd.selectOneInds)
+	if err != nil {
+		return
+	}
+	err = dec.Decode(&rsd.selectZeroInds)
+	if err != nil {
+		return
+	}
+	err = dec.Decode(&rsd.rankSmallBlocks)
+	if err != nil {
+		return
+	}
+	err = dec.Decode(&rsd.num)
+	if err != nil {
+		return
+	}
+	err = dec.Decode(&rsd.oneNum)
+	if err != nil {
+		return
+	}
+	err = dec.Decode(&rsd.zeroNum)
+	if err != nil {
+		return
+	}
+	err = dec.Decode(&rsd.lastBlock)
+	if err != nil {
+		return
+	}
+	err = dec.Decode(&rsd.lastOneNum)
+	if err != nil {
+		return
+	}
+	err = dec.Decode(&rsd.lastZeroNum)
+	if err != nil {
+		return
+	}
+	err = dec.Decode(&rsd.codeLen)
+	if err != nil {
+		return
+	}
+}
+
 // New returns RSDic with a bit array of length 0.
 func New() *RSDic {
 	return &RSDic{
