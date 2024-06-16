@@ -1,7 +1,9 @@
 package rsdic
 
 import (
+	"encoding/binary"
 	"fmt"
+	"io"
 )
 
 func floor(num uint64, div uint64) uint64 {
@@ -23,8 +25,65 @@ func setSlice(bits []uint64, pos uint64, codeLen uint8, val uint64) {
 	}
 }
 
+func setSliceBuffer(bits *BufferedBits, pos uint64, codeLen uint8, val uint64) {
+	bitsBuffer := bits.writeBits
+	isSet := bits.isSet
+	bufferSize := bits.writeBitsSize
+
+	// fmt.Println(bits)
+
+	if codeLen == 0 {
+		return
+	}
+	block, offset := decompose(pos, kSmallBlockSize)
+	bitsBuffer[block-(bufferSize-2)] |= val << offset
+	isSet[block-(bufferSize-2)] = true
+
+	// bits[block] |= val << offset
+
+	// if int64(block) < int64(len(bits)-2) {
+	// 	panic(fmt.Sprintf("block: %d, len(bits): %d", block, len(bits)))
+	// }
+
+	if offset+uint64(codeLen) > kSmallBlockSize {
+		bitsBuffer[block-(bufferSize-2)+1] |= (val >> (kSmallBlockSize - offset))
+		isSet[block-(bufferSize-2)+1] = true
+
+		// bits[block+1] |= (val >> (kSmallBlockSize - offset))
+	}
+}
+
 func getBit(x uint64, pos uint8) bool {
 	return ((x >> pos) & 1) == 1
+}
+
+func getChunk(r io.ReaderAt, bits *BufferedBits, pos uint64) uint64 {
+	numOnDisk := bits.numWritten
+
+	if pos < numOnDisk {
+		// fmt.Println("retrieving from disk", pos)
+		toRead := make([]byte, 8)
+		n, err := r.ReadAt(toRead, int64(pos*8))
+
+		if n < 8 {
+			panic("getChunk: not enough bytes read")
+		}
+
+		if err != nil {
+			panic(err) // TODO: handle
+		}
+
+		// fmt.Println(pos, toRead)
+
+		readChunk := binary.LittleEndian.Uint64(toRead)
+
+		return readChunk
+	} else if bits.isSet[pos-numOnDisk] {
+		// fmt.Println("retrieving from buffer")
+		return bits.writeBits[pos-numOnDisk]
+	}
+
+	panic("getChunk: out of bounds")
 }
 
 func getSlice(bits []uint64, pos uint64, codeLen uint8) uint64 {
@@ -35,6 +94,21 @@ func getSlice(bits []uint64, pos uint64, codeLen uint8) uint64 {
 	ret := (bits[block] >> offset)
 	if offset+uint64(codeLen) > kSmallBlockSize {
 		ret |= (bits[block+1] << (kSmallBlockSize - offset))
+	}
+	if codeLen == 64 {
+		return ret
+	}
+	return ret & ((1 << codeLen) - 1)
+}
+
+func getSliceBuffer(r io.ReaderAt, bits *BufferedBits, pos uint64, codeLen uint8) uint64 {
+	if codeLen == 0 {
+		return 0
+	}
+	block, offset := decompose(pos, kSmallBlockSize)
+	ret := (getChunk(r, bits, block) >> offset)
+	if offset+uint64(codeLen) > kSmallBlockSize {
+		ret |= (getChunk(r, bits, block+1) << (kSmallBlockSize - offset))
 	}
 	if codeLen == 64 {
 		return ret
