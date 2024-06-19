@@ -12,7 +12,10 @@ import (
 
 func TestEmptyRSDic(t *testing.T) {
 	Convey("When a bit vector is empty", t, func() {
-		rsd := New()
+		rsd := New("test.bin")
+		rsd.LoadWriter()
+		defer rsd.CloseWriter()
+
 		Convey("The num should be 0", func() {
 			So(rsd.Num(), ShouldEqual, 0)
 			So(rsd.ZeroNum(), ShouldEqual, 0)
@@ -51,27 +54,27 @@ func readUint64FromFile(filename string) ([]uint64, error) {
 }
 
 func initBitVector(num uint64, ratio float32) (*rawBitVector, *RSDic) {
-	writer, err := os.Create("test.bin")
-	if err != nil {
-		panic(err)
-	}
-	defer writer.Close()
-
 	orig := make([]uint8, num)
 	ranks := make([]uint64, num)
 	oneNum := uint64(0)
-	rsd := New()
+	rsd := New("test.bin")
+	rsd.LoadWriter()
+	defer rsd.CloseWriter()
+
 	for i := uint64(0); i < num; i++ {
 		ranks[i] = oneNum
 		if rand.Float32() > ratio {
 			orig[i] = 0
-			rsd.PushBack(false, writer)
+			rsd.PushBack(false)
 		} else {
 			orig[i] = 1
-			rsd.PushBack(true, writer)
+			rsd.PushBack(true)
 			oneNum++
 		}
 	}
+
+	rsd.LoadReader()
+
 	return &rawBitVector{
 		orig,
 		ranks,
@@ -87,11 +90,12 @@ const (
 func runTestRSDic(name string, t *testing.T, rsd *RSDic, raw *rawBitVector) {
 	// bitsReal := rsd.bitsRaw
 
-	// // test directly reading from file
+	// test directly reading from file
 	// bitsRead, err := readUint64FromFile("test.bin")
 	// if err != nil {
 	// 	t.Fatalf("Error reading test data: %v", err)
 	// }
+	// fmt.Println(bitsRead)
 
 	// for i := 0; i < len(rsd.bits.writeBits); i++ {
 	// 	if rsd.bits.isSet[i] {
@@ -110,11 +114,6 @@ func runTestRSDic(name string, t *testing.T, rsd *RSDic, raw *rawBitVector) {
 	// 		t.Fatalf("bitsReal[%d] = %d, bitsRead[%d] = %d", i, bitsReal[i], i, bitsRead[i])
 	// 	}
 	// }
-
-	readers, err := InitReaders("test.bin")
-	if err != nil {
-		t.Fatalf("Error reading test data: %v", err)
-	}
 
 	// fmt.Println("successfully retrieved from disk")
 
@@ -135,40 +134,42 @@ func runTestRSDic(name string, t *testing.T, rsd *RSDic, raw *rawBitVector) {
 	num := raw.num
 	oneNum := raw.oneNum
 	Convey(name, t, func() {
-		rsd.Select(0, true, readers)
+		rsd.Select(0, true)
 		So(rsd.Num(), ShouldEqual, num)
 		So(rsd.OneNum(), ShouldEqual, oneNum)
-		So(rsd.Rank(num, true, readers), ShouldEqual, oneNum)
+		So(rsd.Rank(num, true), ShouldEqual, oneNum)
 		for i := 0; i < testNum; i++ {
 			ind := uint64(rand.Int31n(int32(num)))
 			if i == 0 {
 				ind = 0 // 0 is special case, and need test
 			}
 			// fmt.Println(ind)
-			So(rsd.Bit(ind, readers), ShouldEqual, orig[ind] == 1)
-			So(rsd.Rank(ind, false, readers), ShouldEqual, ind-ranks[ind])
-			So(rsd.Rank(ind, true, readers), ShouldEqual, ranks[ind])
-			bit, rank := rsd.BitAndRank(ind, readers)
+			So(rsd.Bit(ind), ShouldEqual, orig[ind] == 1)
+			So(rsd.Rank(ind, false), ShouldEqual, ind-ranks[ind])
+			So(rsd.Rank(ind, true), ShouldEqual, ranks[ind])
+			bit, rank := rsd.BitAndRank(ind)
 			So(bit, ShouldEqual, orig[ind] == 1)
 			So(rank, ShouldEqual, bitNum(ranks[ind], ind, bit))
-			So(rsd.Select(rank, bit, readers), ShouldEqual, ind)
+			So(rsd.Select(rank, bit), ShouldEqual, ind)
 		}
 		fmt.Println("retrieval test passed")
 
 		out, err := rsd.MarshalBinary()
 		So(err, ShouldBeNil)
-		newrsd := New()
+		newrsd := New("test.bin")
+		newrsd.LoadReader()
+
 		err = newrsd.UnmarshalBinary(out)
 		So(err, ShouldBeNil)
 		for i := 0; i < testNum; i++ {
 			ind := uint64(rand.Int31n(int32(num)))
-			So(newrsd.Bit(ind, readers), ShouldEqual, orig[ind] == 1)
-			So(newrsd.Rank(ind, false, readers), ShouldEqual, ind-ranks[ind])
-			So(newrsd.Rank(ind, true, readers), ShouldEqual, ranks[ind])
-			bit, rank := rsd.BitAndRank(ind, readers)
+			So(newrsd.Bit(ind), ShouldEqual, orig[ind] == 1)
+			So(newrsd.Rank(ind, false), ShouldEqual, ind-ranks[ind])
+			So(newrsd.Rank(ind, true), ShouldEqual, ranks[ind])
+			bit, rank := rsd.BitAndRank(ind)
 			So(bit, ShouldEqual, orig[ind] == 1)
 			So(rank, ShouldEqual, bitNum(ranks[ind], ind, bit))
-			So(newrsd.Select(rank, bit, readers), ShouldEqual, ind)
+			So(newrsd.Select(rank, bit), ShouldEqual, ind)
 		}
 		fmt.Println("serialization test passed")
 	})
@@ -201,20 +202,19 @@ func TestRandomAllZeroRSDic(t *testing.T) {
 }
 
 func setupRSDic(num uint64, ratio float32) *RSDic {
-	writer, err := os.Create("test.bin")
-	if err != nil {
-		panic(err)
-	}
-	defer writer.Close()
+	rsd := New("test.bin")
+	rsd.LoadWriter()
+	defer rsd.CloseWriter()
 
-	rsd := New()
 	for i := uint64(0); i < num; i++ {
 		if rand.Float32() < ratio {
-			rsd.PushBack(true, writer)
+			rsd.PushBack(true)
 		} else {
-			rsd.PushBack(false, writer)
+			rsd.PushBack(false)
 		}
 	}
+
+	rsd.LoadReader()
 	return rsd
 }
 
@@ -285,83 +285,53 @@ func BenchmarkDenseRawSelect(b *testing.B) {
 }
 
 func BenchmarkBit(b *testing.B) {
-	reader, err := InitReaders("test.bin")
-	if err != nil {
-		panic(err)
-	}
-
 	rsd := setupRSDic(N, 0.5)
 	//	fmt.Printf("%d bytes (%.2f bpc)\n", rsd.AllocSize(), float32(rsd.AllocSize()*8)/N)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		rsd.Bit(uint64(rand.Int31n(int32(N))), reader)
+		rsd.Bit(uint64(rand.Int31n(int32(N))))
 	}
 }
 
 func BenchmarkDenseRSDicRank(b *testing.B) {
-	reader, err := InitReaders("test.bin")
-	if err != nil {
-		panic(err)
-	}
-
 	rsd := setupRSDic(N, 0.5)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		rsd.Rank(uint64(rand.Int31n(int32(N))), true, reader)
+		rsd.Rank(uint64(rand.Int31n(int32(N))), true)
 	}
 }
 
 func BenchmarkDenseRSDicSelect(b *testing.B) {
-	reader, err := InitReaders("test.bin")
-	if err != nil {
-		panic(err)
-	}
-
 	rsd := setupRSDic(N, 0.5)
 	oneNum := rsd.OneNum()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		rsd.Select(uint64(rand.Int31n(int32(oneNum))), true, reader)
+		rsd.Select(uint64(rand.Int31n(int32(oneNum))), true)
 	}
 }
 
 func BenchmarkSparseRSDicBit(b *testing.B) {
-	reader, err := InitReaders("test.bin")
-	if err != nil {
-		panic(err)
-	}
-
 	rsd := setupRSDic(N, 0.01)
 	//fmt.Printf("%d bytes (%.2f)\n", rsd.AllocSize(), float32(rsd.AllocSize()*8)/N)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		rsd.Bit(uint64(rand.Int31n(int32(N))), reader)
+		rsd.Bit(uint64(rand.Int31n(int32(N))))
 	}
 }
 
 func BenchmarkSparseRSDicRank(b *testing.B) {
-	reader, err := InitReaders("test.bin")
-	if err != nil {
-		panic(err)
-	}
-
 	rsd := setupRSDic(N, 0.01)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		rsd.Rank(uint64(rand.Int31n(int32(N))), true, reader)
+		rsd.Rank(uint64(rand.Int31n(int32(N))), true)
 	}
 }
 
 func BenchmarkSparseRSDicSelect(b *testing.B) {
-	reader, err := InitReaders("test.bin")
-	if err != nil {
-		panic(err)
-	}
-
 	rsd := setupRSDic(N, 0.01)
 	oneNum := rsd.OneNum()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		rsd.Select(uint64(rand.Int31n(int32(oneNum))), true, reader)
+		rsd.Select(uint64(rand.Int31n(int32(oneNum))), true)
 	}
 }
