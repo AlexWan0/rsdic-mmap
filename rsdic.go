@@ -446,7 +446,7 @@ func (rsd *RSDic) UnmarshalBinary(in []byte) (err error) {
 	if err != nil {
 		return
 	}
-	return nil
+	return
 }
 
 // Selfer interface for codec library
