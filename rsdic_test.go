@@ -94,34 +94,34 @@ const (
 )
 
 func runTestRSDic(name string, t *testing.T, rsd *RSDic, raw *rawBitVector) {
-	bitsReal := rsd.bitsRaw
+	// bitsReal := rsd.bitsRaw
 
-	// test directly reading from file
-	bitsRead, err := readUint64FromFile("test/bits.bin")
-	if err != nil {
-		t.Fatalf("Error reading test data: %v", err)
-	}
-	// fmt.Println(bitsRead)
+	// // test directly reading from file
+	// bitsRead, err := readUint64FromFile("test/bits.bin")
+	// if err != nil {
+	// 	t.Fatalf("Error reading test data: %v", err)
+	// }
+	// // fmt.Println(bitsRead)
 
-	for i := 0; i < len(rsd.bits.writeBits); i++ {
-		if rsd.bits.isSet[i] {
-			bitsRead = append(bitsRead, rsd.bits.writeBits[i])
-		}
-	}
+	// for i := 0; i < len(rsd.bits.writeBits); i++ {
+	// 	if rsd.bits.isSet[i] {
+	// 		bitsRead = append(bitsRead, rsd.bits.writeBits[i])
+	// 	}
+	// }
 
-	// fmt.Println(len(bitsReal), len(bitsRead))
-	if len(bitsReal) != len(bitsRead) {
-		t.Fatalf("len(bitsReal) = %d, len(bitsRead) = %d", len(bitsReal), len(bitsRead))
-	}
+	// // fmt.Println(len(bitsReal), len(bitsRead))
+	// if len(bitsReal) != len(bitsRead) {
+	// 	t.Fatalf("len(bitsReal) = %d, len(bitsRead) = %d", len(bitsReal), len(bitsRead))
+	// }
 
-	for i := 0; i < len(bitsRead); i++ {
-		// fmt.Println(i, bitsReal[i], bitsRead[i])
-		if bitsReal[i] != bitsRead[i] {
-			t.Fatalf("bitsReal[%d] = %d, bitsRead[%d] = %d", i, bitsReal[i], i, bitsRead[i])
-		}
-	}
+	// for i := 0; i < len(bitsRead); i++ {
+	// 	// fmt.Println(i, bitsReal[i], bitsRead[i])
+	// 	if bitsReal[i] != bitsRead[i] {
+	// 		t.Fatalf("bitsReal[%d] = %d, bitsRead[%d] = %d", i, bitsReal[i], i, bitsRead[i])
+	// 	}
+	// }
 
-	fmt.Println("successfully retrieved from disk")
+	// fmt.Println("successfully retrieved from disk")
 
 	// test reading using mmap
 	// for i := 0; i < len(rsd.bitsRaw); i++ {

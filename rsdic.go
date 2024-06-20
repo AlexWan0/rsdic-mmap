@@ -61,7 +61,6 @@ type RSDic struct {
 	lastZeroNum       uint64
 	codeLen           uint64
 	bits              *BufferedBits
-	bitsRaw           []uint64
 	rankBlockLength   uint64
 	rankSmBlockLength uint64
 }
@@ -128,12 +127,8 @@ func (rs *RSDic) writeBlock() {
 			rs.bits.isSet[0] = rs.bits.isSet[1]
 			rs.bits.isSet[1] = false
 		}
-		if newSize > uint64(len(rs.bitsRaw)) {
-			rs.bitsRaw = append(rs.bitsRaw, 0)
-		}
 
 		setSliceBuffer(rs.bits, rs.codeLen, codeLen, code)
-		setSlice(rs.bitsRaw, rs.codeLen, codeLen, code)
 		// fmt.Println(rs.bits, rs.writeBits)
 
 		rs.lastBlock = 0
@@ -517,7 +512,6 @@ func New(path string) (*RSDic, error) {
 		bits:              NewBits(),
 		rankBlockLength:   0,
 		rankSmBlockLength: 0,
-		bitsRaw:           make([]uint64, 0),
 	}, nil
 }
 
