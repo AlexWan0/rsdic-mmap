@@ -451,125 +451,40 @@ func (rsd *RSDic) UnmarshalBinary(in []byte) (err error) {
 
 // Selfer interface for codec library
 func (rsd *RSDic) CodecEncodeSelf(enc *codec.Encoder) {
-	err := enc.Encode(rsd.bits)
-	if err != nil {
-		return
-	}
-	err = enc.Encode(rsd.num)
-	if err != nil {
-		return
-	}
-	err = enc.Encode(rsd.oneNum)
-	if err != nil {
-		return
-	}
-	err = enc.Encode(rsd.zeroNum)
-	if err != nil {
-		return
-	}
-	err = enc.Encode(rsd.lastBlock)
-	if err != nil {
-		return
-	}
-	err = enc.Encode(rsd.lastOneNum)
-	if err != nil {
-		return
-	}
-	err = enc.Encode(rsd.lastZeroNum)
-	if err != nil {
-		return
-	}
-	err = enc.Encode(rsd.codeLen)
-	if err != nil {
-		return
-	}
-
-	err = enc.Encode(rsd.bits.writeBits)
-	if err != nil {
-		return
-	}
-	err = enc.Encode(rsd.bits.writeBitsSize)
-	if err != nil {
-		return
-	}
-	err = enc.Encode(rsd.bits.isSet)
-	if err != nil {
-		return
-	}
-	err = enc.Encode(rsd.bits.numWritten)
-	if err != nil {
-		return
-	}
-	err = enc.Encode(rsd.rankBlockLength)
-	if err != nil {
-		return
-	}
-	err = enc.Encode(rsd.rankSmBlockLength)
-	if err != nil {
-		return
-	}
+	enc.MustEncode(rsd.bits)
+	enc.MustEncode(rsd.num)
+	enc.MustEncode(rsd.oneNum)
+	enc.MustEncode(rsd.zeroNum)
+	enc.MustEncode(rsd.lastBlock)
+	enc.MustEncode(rsd.lastOneNum)
+	enc.MustEncode(rsd.lastZeroNum)
+	enc.MustEncode(rsd.codeLen)
+	enc.MustEncode(rsd.bits.writeBits)
+	enc.MustEncode(rsd.bits.writeBitsSize)
+	enc.MustEncode(rsd.bits.isSet)
+	enc.MustEncode(rsd.bits.numWritten)
+	enc.MustEncode(rsd.rankBlockLength)
+	enc.MustEncode(rsd.rankSmBlockLength)
 }
 
 // Selfer interface for codec library
 func (rsd *RSDic) CodecDecodeSelf(dec *codec.Decoder) {
-	err := dec.Decode(&rsd.bits)
-	if err != nil {
-		return
-	}
-	err = dec.Decode(&rsd.num)
-	if err != nil {
-		return
-	}
-	err = dec.Decode(&rsd.oneNum)
-	if err != nil {
-		return
-	}
-	err = dec.Decode(&rsd.zeroNum)
-	if err != nil {
-		return
-	}
-	err = dec.Decode(&rsd.lastBlock)
-	if err != nil {
-		return
-	}
-	err = dec.Decode(&rsd.lastOneNum)
-	if err != nil {
-		return
-	}
-	err = dec.Decode(&rsd.lastZeroNum)
-	if err != nil {
-		return
-	}
-	err = dec.Decode(&rsd.codeLen)
-	if err != nil {
-		return
-	}
+	dec.MustDecode(&rsd.bits)
+	dec.MustDecode(&rsd.num)
+	dec.MustDecode(&rsd.oneNum)
+	dec.MustDecode(&rsd.zeroNum)
+	dec.MustDecode(&rsd.lastBlock)
+	dec.MustDecode(&rsd.lastOneNum)
+	dec.MustDecode(&rsd.lastZeroNum)
+	dec.MustDecode(&rsd.codeLen)
 
 	rsd.bits = NewBits()
-	err = dec.Decode(&rsd.bits.writeBits)
-	if err != nil {
-		return
-	}
-	err = dec.Decode(&rsd.bits.writeBitsSize)
-	if err != nil {
-		return
-	}
-	err = dec.Decode(&rsd.bits.isSet)
-	if err != nil {
-		return
-	}
-	err = dec.Decode(&rsd.bits.numWritten)
-	if err != nil {
-		return
-	}
-	err = dec.Decode(&rsd.rankBlockLength)
-	if err != nil {
-		return
-	}
-	err = dec.Decode(&rsd.rankSmBlockLength)
-	if err != nil {
-		return
-	}
+	dec.MustDecode(&rsd.bits.writeBits)
+	dec.MustDecode(&rsd.bits.writeBitsSize)
+	dec.MustDecode(&rsd.bits.isSet)
+	dec.MustDecode(&rsd.bits.numWritten)
+	dec.MustDecode(&rsd.rankBlockLength)
+	dec.MustDecode(&rsd.rankSmBlockLength)
 }
 
 func NewBits() *BufferedBits {
