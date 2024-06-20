@@ -149,24 +149,6 @@ func (rs *RSDic) writeBlock() {
 		appendUint64(rs.writer.pointerWriter, rs.codeLen)
 		rs.rankBlockLength++
 	}
-
-	// toWrite := make([]byte, 16)
-	// binary.LittleEndian.PutUint64(toWrite[:8], rs.writeBits[0])
-	// binary.LittleEndian.PutUint64(toWrite[8:], rs.writeBits[1])
-	// fmt.Println("toWrite", rs.writeBits[0], rs.writeBits[1])
-	// writer.Write(toWrite)
-	// for i := 0; i < 2; i++ {
-	// 	// fmt.Println("isSet", rs.isSet[i])
-	// 	if rs.isSet[i] {
-	// 		// fmt.Println("skipping write at", i)
-	// 		toWrite := make([]byte, 8)
-	// 		binary.LittleEndian.PutUint64(toWrite, rs.writeBits[i])
-	// 		writer.Write(toWrite)
-
-	// 		rs.isSet[i] = false
-	// 		rs.isSet[i] = false
-	// 	}
-	// }
 }
 
 func (rs RSDic) lastBlockInd() uint64 {
