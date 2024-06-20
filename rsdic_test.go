@@ -12,7 +12,9 @@ import (
 
 func TestEmptyRSDic(t *testing.T) {
 	Convey("When a bit vector is empty", t, func() {
-		rsd := New("test.bin")
+		rsd, err := New("test")
+		So(err, ShouldBeNil)
+
 		rsd.LoadWriter()
 		defer rsd.CloseWriter()
 
@@ -57,7 +59,11 @@ func initBitVector(num uint64, ratio float32) (*rawBitVector, *RSDic) {
 	orig := make([]uint8, num)
 	ranks := make([]uint64, num)
 	oneNum := uint64(0)
-	rsd := New("test.bin")
+	rsd, err := New("test")
+	if err != nil {
+		panic(err)
+	}
+
 	rsd.LoadWriter()
 	defer rsd.CloseWriter()
 
@@ -88,36 +94,36 @@ const (
 )
 
 func runTestRSDic(name string, t *testing.T, rsd *RSDic, raw *rawBitVector) {
-	// bitsReal := rsd.bitsRaw
+	bitsReal := rsd.bitsRaw
 
 	// test directly reading from file
-	// bitsRead, err := readUint64FromFile("test.bin")
-	// if err != nil {
-	// 	t.Fatalf("Error reading test data: %v", err)
-	// }
+	bitsRead, err := readUint64FromFile("test/bits.bin")
+	if err != nil {
+		t.Fatalf("Error reading test data: %v", err)
+	}
 	// fmt.Println(bitsRead)
 
-	// for i := 0; i < len(rsd.bits.writeBits); i++ {
-	// 	if rsd.bits.isSet[i] {
-	// 		bitsRead = append(bitsRead, rsd.bits.writeBits[i])
-	// 	}
-	// }
+	for i := 0; i < len(rsd.bits.writeBits); i++ {
+		if rsd.bits.isSet[i] {
+			bitsRead = append(bitsRead, rsd.bits.writeBits[i])
+		}
+	}
 
 	// fmt.Println(len(bitsReal), len(bitsRead))
-	// if len(bitsReal) != len(bitsRead) {
-	// 	t.Fatalf("len(bitsReal) = %d, len(bitsRead) = %d", len(bitsReal), len(bitsRead))
-	// }
+	if len(bitsReal) != len(bitsRead) {
+		t.Fatalf("len(bitsReal) = %d, len(bitsRead) = %d", len(bitsReal), len(bitsRead))
+	}
 
-	// for i := 0; i < len(bitsRead); i++ {
-	// 	// fmt.Println(i, bitsReal[i], bitsRead[i])
-	// 	if bitsReal[i] != bitsRead[i] {
-	// 		t.Fatalf("bitsReal[%d] = %d, bitsRead[%d] = %d", i, bitsReal[i], i, bitsRead[i])
-	// 	}
-	// }
+	for i := 0; i < len(bitsRead); i++ {
+		// fmt.Println(i, bitsReal[i], bitsRead[i])
+		if bitsReal[i] != bitsRead[i] {
+			t.Fatalf("bitsReal[%d] = %d, bitsRead[%d] = %d", i, bitsReal[i], i, bitsRead[i])
+		}
+	}
 
-	// fmt.Println("successfully retrieved from disk")
+	fmt.Println("successfully retrieved from disk")
 
-	// // test reading using mmap
+	// test reading using mmap
 	// for i := 0; i < len(rsd.bitsRaw); i++ {
 	// 	readBit := getChunk(readers.bitsReader, rsd.bits, uint64(i))
 
@@ -156,7 +162,9 @@ func runTestRSDic(name string, t *testing.T, rsd *RSDic, raw *rawBitVector) {
 
 		out, err := rsd.MarshalBinary()
 		So(err, ShouldBeNil)
-		newrsd := New("test.bin")
+		newrsd, err := New("test")
+		So(err, ShouldBeNil)
+
 		newrsd.LoadReader()
 
 		err = newrsd.UnmarshalBinary(out)
@@ -177,7 +185,12 @@ func runTestRSDic(name string, t *testing.T, rsd *RSDic, raw *rawBitVector) {
 
 func TestRandomSmallRSDic(t *testing.T) {
 	raw, rsd := initBitVector(500, 0.8)
-	// fmt.Println(raw.orig)
+	// fmt.Println(rsd.rankBlocks)
+	// fmt.Println(rsd.pointerBlocks)
+	// fmt.Println(rsd.rankBlockLength)
+
+	// fmt.Println(len(rsd.rankSmallBlocks), rsd.rankSmBlockLength)
+
 	runTestRSDic("When a small bit vector is assigned", t, rsd, raw)
 }
 
@@ -202,7 +215,11 @@ func TestRandomAllZeroRSDic(t *testing.T) {
 }
 
 func setupRSDic(num uint64, ratio float32) *RSDic {
-	rsd := New("test.bin")
+	rsd, err := New("test")
+	if err != nil {
+		panic(err)
+	}
+
 	rsd.LoadWriter()
 	defer rsd.CloseWriter()
 
